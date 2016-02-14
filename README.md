@@ -1,6 +1,8 @@
 # WordDictionaryTree
 A demonstration of word auto-completion. Type a word in the TextField. Possible complete words will be listed below. Clicking one will replace the text with that word.
 
+![alt tag](http://i.imgur.com/BI2PTaJ.jpg)
+
 Though I'm probably through with this for now, I'd like to implement the following changes some day:
 - Show an open TextArea and as you type space delineated words the list of possibilities is shown underneath.
 - This may require a complete overhaul of the data structure: prioritize complete words by popularity.
