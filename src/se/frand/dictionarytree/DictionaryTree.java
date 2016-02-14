@@ -44,14 +44,15 @@ public class DictionaryTree {
 	}
 	
 	public void add(String word) {
+		boolean upper = Character.isUpperCase(word.charAt(0));
 		StringBuilder sb = new StringBuilder(word.toLowerCase());
 		if(root.firstChild == null)
-			root.firstChild = add(sb, new TreeNode());
+			root.firstChild = add(sb, new TreeNode(), upper);
 		else
-			add(sb, root.firstChild);
+			add(sb, root.firstChild, upper);
 	}
 	
-	private TreeNode add(StringBuilder word, TreeNode node) {
+	private TreeNode add(StringBuilder word, TreeNode node, boolean upperTerminator) {
 		//System.out.println(word);
 
 		char letter = word.charAt(0);
@@ -62,9 +63,10 @@ public class DictionaryTree {
 			node.letter = letter;
 			word = word.deleteCharAt(0);
 			if(word.length() > 0) {
-				node.firstChild = add(word, new TreeNode());
+				node.firstChild = add(word, new TreeNode(), upperTerminator);
 			} else {
 				node.terminator = true;
+				node.upperTerminator = upperTerminator;
 			}
 		}
 
@@ -75,18 +77,19 @@ public class DictionaryTree {
 			word = word.deleteCharAt(0);
 			if(word.length() > 0) {
 				if(node.firstChild == null) {
-					node.firstChild = add(word, new TreeNode());
+					node.firstChild = add(word, new TreeNode(), upperTerminator);
 				} else {
-					add(word, node.firstChild);
+					add(word, node.firstChild, upperTerminator);
 				}
 			} else {
 				node.terminator = true;
+				node.upperTerminator = upperTerminator;
 			}
 		} else {
 			if(node.nextSibling == null)
-				node.nextSibling = add(word, new TreeNode());
+				node.nextSibling = add(word, new TreeNode(), upperTerminator);
 			else
-				add(word, node.nextSibling);
+				add(word, node.nextSibling, upperTerminator);
 		}
 
 		return node;
@@ -133,20 +136,30 @@ public class DictionaryTree {
 	}
 	
 	public String[] nextNWords(String wordStart, int n) {
-		return nextNWords(findNode(new StringBuilder(wordStart),root.firstChild).firstChild,
+		TreeNode node = findNode(new StringBuilder(wordStart),root.firstChild);
+		if(node == null) {
+			return new String[0];
+		}
+		return nextNWords(node.firstChild,
 				new Vector<String>(10),
 				wordStart,
-				n)
+				n,
+				node.upperTerminator)
 				.toArray(new String[10]);
 	}
 	
-	private Vector<String> nextNWords(TreeNode node, Vector<String> v, String wordStart, int n) {
-		if(isWord(wordStart))
-			v.addElement(wordStart);
+	private Vector<String> nextNWords(TreeNode node, Vector<String> v, String wordStart, int n, boolean upper) {
+		StringBuilder sb;
+		if(isWord(wordStart)) {
+			sb = new StringBuilder(wordStart);
+			if(upper)
+				sb.replace(0, 1, sb.substring(0, 1).toUpperCase());
+			v.addElement(sb.toString());
+		}
 		LinkedList<Pair<TreeNode, StringBuilder>> queue =
 				new LinkedList<Pair<TreeNode, StringBuilder>>(); 
 		TreeNode currentNode = node;
-		StringBuilder sb = new StringBuilder(wordStart);
+		sb = new StringBuilder(wordStart);
 		while(v.size() < n && currentNode != null) {
 			if(currentNode.firstChild != null)
 				queue.add(
@@ -156,6 +169,8 @@ public class DictionaryTree {
 			
 			if(currentNode.terminator) {
 				sb.append(currentNode.letter);
+				if(currentNode.upperTerminator)
+					sb.replace(0, 1, sb.substring(0, 1).toUpperCase());
 				v.addElement(sb.toString());
 				sb.deleteCharAt(sb.length()-1);
 			}
@@ -181,8 +196,10 @@ public class DictionaryTree {
 		public TreeNode firstChild;
 		public TreeNode nextSibling;
 		public boolean terminator;
+		public boolean upperTerminator;
 		public TreeNode() {
 			terminator = false;
+			upperTerminator = false;
 			letter = '\0';
 		}
 
